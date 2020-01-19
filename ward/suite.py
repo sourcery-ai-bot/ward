@@ -25,7 +25,7 @@ class Suite:
             counts[path] += 1
         return counts
 
-    def generate_test_runs(self, order="standard") -> Generator[TestResult, None, None]:
+    def generate_test_runs(self, order="standard", coverage=None) -> Generator[TestResult, None, None]:
         if order == "random":
             shuffle(self.tests)
         num_tests_per_module = self._test_counts_per_module()
@@ -41,7 +41,9 @@ class Suite:
                 try:
                     resolved_vals = generated_test.resolve_args(self.cache, iteration=i)
                     generated_test.format_description(resolved_vals)
+                    coverage.start()
                     generated_test(**resolved_vals)
+                    coverage.stop()
                     outcome = (
                         TestOutcome.XPASS if marker == "XFAIL" else TestOutcome.PASS
                     )

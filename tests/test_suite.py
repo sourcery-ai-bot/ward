@@ -1,5 +1,8 @@
 from collections import defaultdict
 from unittest import mock
+from unittest.mock import create_autospec
+
+from coverage import Coverage
 
 from ward import expect, fixture
 from ward.fixtures import Fixture
@@ -86,14 +89,14 @@ def _(suite=suite):
     f"Suite.generate_test_runs generates {NUMBER_OF_TESTS} when suite has {NUMBER_OF_TESTS} tests"
 )
 def _(suite=suite):
-    runs = suite.generate_test_runs()
+    runs = suite.generate_test_runs(coverage=create_autospec(Coverage))
 
     expect(list(runs)).has_length(NUMBER_OF_TESTS)
 
 
 @test("Suite.generate_test_runs generates yields the expected test results")
 def _(suite=suite):
-    results = list(suite.generate_test_runs())
+    results = list(suite.generate_test_runs(coverage=create_autospec(Coverage)))
     expected = [
         TestResult(test=test, outcome=TestOutcome.PASS, error=None, message="")
         for test in suite.tests
@@ -110,7 +113,7 @@ def _(module=module):
     t = Test(fn=_, module_name=module)
     failing_suite = Suite(tests=[t])
 
-    results = failing_suite.generate_test_runs()
+    results = failing_suite.generate_test_runs(coverage=create_autospec(Coverage))
     result = next(results)
 
     expected_result = TestResult(
@@ -126,7 +129,7 @@ def _(module=module):
 def _(skipped=skipped_test, example=example_test):
     suite = Suite(tests=[example, skipped])
 
-    test_runs = list(suite.generate_test_runs())
+    test_runs = list(suite.generate_test_runs(coverage=create_autospec(Coverage)))
     expected_runs = [
         TestResult(example, TestOutcome.PASS, None, ""),
         TestResult(skipped, TestOutcome.SKIP, None, ""),
@@ -158,7 +161,7 @@ def _(module=module):
     suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
-    list(suite.generate_test_runs())
+    list(suite.generate_test_runs(coverage=create_autospec(Coverage)))
 
     expect(events).equals([1, 2, 3])
 
@@ -192,7 +195,7 @@ def _(module=module):
     suite = Suite(tests=[Test(fn=my_test, module_name=module)])
 
     # Exhaust the test runs generator
-    list(suite.generate_test_runs())
+    list(suite.generate_test_runs(coverage=create_autospec(Coverage)))
 
     expect(events).equals([1, 2, 3, 4, 5])
 
@@ -220,7 +223,7 @@ def _(module=module):
 
     suite = Suite(tests=[Test(fn=test, module_name=module)])
 
-    list(suite.generate_test_runs())
+    list(suite.generate_test_runs(coverage=create_autospec(Coverage)))
 
     expect(events).equals([1, 2, 3])
 
@@ -261,7 +264,7 @@ def _():
         ]
     )
 
-    list(suite.generate_test_runs())
+    list(suite.generate_test_runs(coverage=create_autospec(Coverage)))
 
     expect(events).equals(
         [
@@ -306,7 +309,7 @@ def _():
         ]
     )
 
-    list(suite.generate_test_runs())
+    list(suite.generate_test_runs(coverage=create_autospec(Coverage)))
 
     expect(events).equals(
         [
@@ -367,7 +370,7 @@ def _():
         ]
     )
 
-    list(suite.generate_test_runs())
+    list(suite.generate_test_runs(coverage=create_autospec(Coverage)))
 
     expect(events).equals(
         [
@@ -418,7 +421,7 @@ def _():
         ]
     )
 
-    list(suite.generate_test_runs())
+    list(suite.generate_test_runs(coverage=create_autospec(Coverage)))
 
     # Ensure that each parameterised instance of the final test in the
     # module runs before the module-level teardown occurs.

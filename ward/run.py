@@ -5,6 +5,7 @@ from timeit import default_timer
 
 import click
 from colorama import init
+from coverage import Coverage
 
 from ward._ward_version import __version__
 from ward.collect import (
@@ -64,7 +65,8 @@ def run(path, search, fail_limit, test_output_style, order):
     time_to_collect = default_timer() - start_run
 
     suite = Suite(tests=tests)
-    test_results = suite.generate_test_runs(order=order)
+    coverage = Coverage()
+    test_results = suite.generate_test_runs(order=order, coverage=coverage)
 
     writer = SimpleTestResultWrite(suite=suite, test_output_style=test_output_style)
     results = writer.output_all_test_results(
@@ -73,6 +75,8 @@ def run(path, search, fail_limit, test_output_style, order):
     time_taken = default_timer() - start_run
     writer.output_test_result_summary(results, time_taken)
 
+    coverage.save()
+    coverage.html_report(directory="cov")
     exit_code = get_exit_code(results)
 
     sys.exit(exit_code.value)
