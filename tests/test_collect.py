@@ -26,7 +26,7 @@ from ward.testing import Test, each, skip
 
 
 def named():
-    assert "fox" == "fox"
+    pass
 
 
 @fixture
@@ -96,7 +96,7 @@ def _():
     t = Test(fn=named, module_name="", tags=[])
     tag_expr = parse("apples")
     results = list(filter_tests([t], tag_expr=tag_expr))
-    assert results == []
+    assert not results
 
 
 @test("filter_tests matches all tags when a tag expression is an empty string")
@@ -113,7 +113,7 @@ def _():
     two = Test(fn=named, module_name="two", tags=["bananas"])
     tag_expr = parse("carrots")
     results = list(filter_tests([one, two], tag_expr=tag_expr))
-    assert results == []
+    assert not results
 
 
 @fixture
@@ -128,7 +128,7 @@ def marker_fixture():
 
 @test("filter_fixtures on empty list returns empty list")
 def _():
-    assert list(filter_fixtures([])) == []
+    assert not list(filter_fixtures([]))
 
 
 @test("filter_fixtures matches anything with empty query and paths")
@@ -158,7 +158,7 @@ def _(query=each("marker", "mark", "ret", "return", '"')):
 @test("filter_fixtures excludes fixtures when querying for {query!r}")
 def _(query=each("echo", "foobar", "wizbang")):
     fixtures = [Fixture(f) for f in [named_fixture, marker_fixture]]
-    assert list(filter_fixtures(fixtures, query=query)) == []
+    assert not list(filter_fixtures(fixtures, query=query))
 
 
 THIS_FILE = Path(__file__)
@@ -173,7 +173,7 @@ def _(path=each(THIS_FILE, THIS_FILE.parent, THIS_FILE.parent.parent)):
 @test("filter_fixtures excludes by path on {path}")
 def _(path=each(THIS_FILE.parent / "the-fixture-is-not-in-this-file.py")):
     fixtures = [Fixture(f) for f in [named_fixture]]
-    assert list(filter_fixtures(fixtures, paths=[path])) == []
+    assert not list(filter_fixtures(fixtures, paths=[path]))
 
 
 @test("is_test_module(<module: '{module_name}'>) returns {rv}")

@@ -98,12 +98,13 @@ def get_info_for_modules(
             module_infos.append(mod)
 
     # Check for modules at the root of the specified path (or paths)
-    for mod in pkgutil.iter_modules([str(p) for p in paths if p.is_dir()]):
-        if is_test_module(mod) and not _is_excluded_module(mod, exclude):
-            module_infos.append(mod)
-
+    module_infos.extend(
+        mod
+        for mod in pkgutil.iter_modules([str(p) for p in paths if p.is_dir()])
+        if is_test_module(mod) and not _is_excluded_module(mod, exclude)
+    )
     # Now check for modules in every subdirectory
-    checked_dirs: Set[Path] = set(p for p in paths)
+    checked_dirs: Set[Path] = set(paths)
     for p in paths:
         for root, dirs, _ in os.walk(str(p)):
             if _excluded(Path(root), exclude):
@@ -119,12 +120,12 @@ def get_info_for_modules(
                 # if we have seen this path before, skip it
                 if dir_path not in checked_dirs and not _excluded(dir_path, exclude):
                     checked_dirs.add(dir_path)
-                    for mod in pkgutil.iter_modules([str(dir_path)]):
-                        if is_test_module(mod) and not _is_excluded_module(
-                            mod, exclude
-                        ):
-                            module_infos.append(mod)
-
+                    module_infos.extend(
+                        mod
+                        for mod in pkgutil.iter_modules([str(dir_path)])
+                        if is_test_module(mod)
+                        and not _is_excluded_module(mod, exclude)
+                    )
     return module_infos
 
 
@@ -173,8 +174,7 @@ def get_tests_in_modules(modules: Iterable, capture_output: bool = True) -> List
     for mod in modules:
         mod_name = mod.__name__
         mod_path = get_absolute_path(mod)
-        anon_tests: List[Callable] = COLLECTED_TESTS[mod_path]
-        if anon_tests:
+        if anon_tests := COLLECTED_TESTS[mod_path]:
             for test_fn in anon_tests:
                 meta: CollectionMetadata = getattr(test_fn, "ward_meta")
                 tests.append(

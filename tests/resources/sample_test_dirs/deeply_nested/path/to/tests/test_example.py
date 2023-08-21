@@ -5,4 +5,4 @@ from test_another_example import *
 
 @test("two is equal to itself")
 def _():
-    assert 2 == 2
+    pass

@@ -114,15 +114,11 @@ def format_test_case_number(test: Test) -> str:
     return value is '[3/5]'.
     """
     param_meta = test.param_meta
-    if param_meta.group_size > 1:
-        pad = len(str(param_meta.group_size))
-        iter_indicator = (
-            f"[{param_meta.instance_index + 1:>{pad}}/{param_meta.group_size}]"
-        )
-    else:
-        iter_indicator = ""
+    if param_meta.group_size <= 1:
+        return ""
 
-    return iter_indicator
+    pad = len(str(param_meta.group_size))
+    return f"[{param_meta.instance_index + 1:>{pad}}/{param_meta.group_size}]"
 
 
 class TestOutputStyle(str, Enum):
@@ -235,7 +231,7 @@ class TestTimingStatsPanel:
         num_slowest_displayed = min(
             len(self.all_tests_in_session), self.num_tests_to_show
         )
-        panel = Panel(
+        yield Panel(
             RenderGroup(
                 Padding(
                     f"Median: [b]{self._median_secs * 1000:.2f}[/b]ms"
@@ -249,8 +245,6 @@ class TestTimingStatsPanel:
             style="none",
             border_style="rule.line",
         )
-
-        yield panel
 
 
 @dataclass
@@ -852,8 +846,7 @@ class TestResultWriter(TestResultWriterBase):
         yield ")", "default"
 
     def print_traceback(self, err):
-        trace = getattr(err, "__traceback__", "")
-        if trace:
+        if trace := getattr(err, "__traceback__", ""):
             # The first frame contains library internal code which is not
             # relevant to end users, so skip over it.
             trace = trace.tb_next
@@ -928,9 +921,7 @@ class TestResultWriter(TestResultWriterBase):
             self.console.print()
 
     def output_test_failed_location(self, test_result: TestResult):
-        if isinstance(test_result.error, TestFailure) or isinstance(
-            test_result.error, AssertionError
-        ):
+        if isinstance(test_result.error, (TestFailure, AssertionError)):
             self.console.print(
                 Padding(
                     Text(
@@ -1100,7 +1091,7 @@ def add_fixture_dependencies_to_tree(
 
 def add_fixture_usages_by_tests_to_tree(node: Tree, used_by: Iterable[Test]) -> None:
     grouped_used_by = group_by(used_by, key=lambda t: t.description)
-    for idx, (description, tests) in enumerate(grouped_used_by.items()):
+    for description, tests in grouped_used_by.items():
         test = tests[0]
         loc = format_test_location(test)
         sep = f" [{len(tests)}]" if len(tests) > 1 else ""
@@ -1124,10 +1115,10 @@ def get_exit_code(results: Iterable[TestResult]) -> ExitCode:
     if not results:
         return ExitCode.NO_TESTS_FOUND
 
-    if any(
-        r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results
-    ):
-        exit_code = ExitCode.FAILED
-    else:
-        exit_code = ExitCode.SUCCESS
-    return exit_code
+    return (
+        ExitCode.FAILED
+        if any(
+            r.outcome in [TestOutcome.FAIL, TestOutcome.XPASS] for r in results
+        )
+        else ExitCode.SUCCESS
+    )

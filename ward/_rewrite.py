@@ -33,10 +33,7 @@ assert_func_namespace = {
 
 
 def get_assertion_msg(node: ast.expr) -> str:
-    if node.msg and isinstance(node.msg, ast.Str):
-        msg = node.msg.s
-    else:
-        msg = ""
+    msg = node.msg.s if node.msg and isinstance(node.msg, ast.Str) else ""
     return msg
 
 

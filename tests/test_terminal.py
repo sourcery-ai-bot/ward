@@ -390,6 +390,6 @@ def _(console=mock_rich_console):
         config_path=None,
     )
 
-    result = result_writer.output_all_test_results(_ for _ in ())
+    result = result_writer.output_all_test_results(iter(()))
     assert result == []
     assert not console.print.called

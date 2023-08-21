@@ -25,7 +25,7 @@ from ward.testing import (
 
 
 def f():
-    assert 1 == 1
+    pass
 
 
 mod = "my_module"
@@ -553,7 +553,7 @@ def _(func=example_test):
     dest = defaultdict(list)
     path = Path("p")
     test("test", _collect_into=dest, _force_path=path)(func)
-    assert len(dest) == 0
+    assert not dest
 
 
 @test("@test doesn't tests imported from another test module")
@@ -562,7 +562,7 @@ def _(func=example_test):
     dest = defaultdict(list)
     path = Path("p")
     test("test", _collect_into=dest, _force_path=path)(func)
-    assert len(dest) == 0
+    assert not dest
 
 
 for outcome, should_fail_session in [

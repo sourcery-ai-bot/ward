@@ -55,12 +55,10 @@ def _get_debugger_hook(hookname: str):
     if dot == "":
         modname = "builtins"
     module = importlib.import_module(modname)
-    if hookname == "pdb.set_trace":
-        set_trace = module.Pdb(stdout=original_stdout, skip=["ward*"]).set_trace
-        hook = set_trace
-    else:
-        hook = getattr(module, funcname)
-    return hook
+    if hookname != "pdb.set_trace":
+        return getattr(module, funcname)
+    set_trace = module.Pdb(stdout=original_stdout, skip=["ward*"]).set_trace
+    return set_trace
 
 
 __breakpointhook__ = _breakpointhook

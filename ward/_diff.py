@@ -103,8 +103,4 @@ class Diff:
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
-        if self.show_symbols:
-            result = self.build_symbolic_unified_diff()
-        else:
-            result = self.build_unified_diff()
-        yield from result
+        yield from self.build_symbolic_unified_diff() if self.show_symbols else self.build_unified_diff()

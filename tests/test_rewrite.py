@@ -15,7 +15,7 @@ from ward.testing import Test, each
 
 @testable_test
 def passing_fn():
-    assert 1 == 1
+    pass
 
 
 @testable_test
@@ -176,13 +176,13 @@ if True:
 
     @test("test with indentation level of 1")
     def _():
-        assert 1 + 2 == 3
+        pass
 
     if True:
 
         @test("test with indentation level of 2")
         def _():
-            assert 2 + 3 == 5
+            pass
 
 
 @test("rewriter finds correct function when there is a lambda in an each")

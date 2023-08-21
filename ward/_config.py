@@ -41,10 +41,7 @@ def read_config_toml(project_root: Path, config_file: str) -> _ConfigDict:
 
 
 def as_list(conf: _ConfigDict):
-    if isinstance(conf, list):
-        return conf
-    else:
-        return [conf]
+    return conf if isinstance(conf, list) else [conf]
 
 
 def apply_multi_defaults(
@@ -98,11 +95,7 @@ def set_defaults_from_config(
 
     file_config = read_config_toml(project_root, _CONFIG_FILE)
 
-    if file_config:
-        config_path = project_root / _CONFIG_FILE
-    else:
-        config_path = None
-
+    config_path = project_root / _CONFIG_FILE if file_config else None
     context.params["config_path"] = config_path
 
     multi_defaults = apply_multi_defaults(file_config, context.params)
@@ -114,9 +107,7 @@ def set_defaults_from_config(
     path_config_keys = ["path", "exclude"]
     for conf_key, paths in file_config.items():
         if conf_key in path_config_keys:
-            relative_path_strs = []
-            for path_str in paths:
-                relative_path_strs.append(str((project_root / path_str)))
+            relative_path_strs = [str((project_root / path_str)) for path_str in paths]
             file_config[conf_key] = tuple(relative_path_strs)
 
     context.default_map.update(file_config)

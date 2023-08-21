@@ -340,17 +340,14 @@ class Test:
         """
         default_args = self.resolver.get_default_args()
         lengths = [len(arg) for _, arg in default_args.items() if isinstance(arg, Each)]
-        is_valid = len(set(lengths)) in (0, 1)
+        is_valid = len(set(lengths)) in {0, 1}
         if not is_valid:
             raise ParameterisationError(
                 f"The test {self.name}/{self.description} is parameterised incorrectly. "
                 f"Please ensure all instances of 'each' in the test signature "
                 f"are of equal length."
             )
-        if len(lengths) == 0:
-            return 1
-        else:
-            return lengths[0]
+        return 1 if not lengths else lengths[0]
 
     def deps(self) -> Mapping[str, inspect.Parameter]:
         return inspect.signature(self.fn).parameters
@@ -396,11 +393,7 @@ def test(description: str, *args, tags: Optional[List[str]] = None, **kwargs):
         is_home_module: bool = "." not in module_name
         if is_test_module_name(module_name) and is_home_module:
             force_path: Path = kwargs.get("_force_path")
-            if force_path:
-                path = force_path.absolute()
-            else:
-                path = get_absolute_path(unwrapped)
-
+            path = force_path.absolute() if force_path else get_absolute_path(unwrapped)
             if hasattr(unwrapped, "ward_meta"):
                 unwrapped.ward_meta.description = description
                 unwrapped.ward_meta.tags = tags
@@ -529,20 +522,16 @@ class TestArgumentResolver:
         Resolved values will be stored in fixture_cache, accessible
         using the fixture cache key (See `Fixture.key`).
         """
-        if self.test.capture_output:
-            with redirect_stdout(self.test.sout), redirect_stderr(self.test.serr):
-                return self._resolve_args(cache)
-        else:
+        if not self.test.capture_output:
+            return self._resolve_args(cache)
+        with redirect_stdout(self.test.sout), redirect_stderr(self.test.serr):
             return self._resolve_args(cache)
 
     def _resolve_args(self, cache: FixtureCache) -> Dict[str, Any]:
         args_for_iteration = self._get_args_for_iteration()
         resolved_args: Dict[str, Any] = {}
         for name, arg in args_for_iteration.items():
-            if is_fixture(arg):
-                resolved = self._resolve_single_arg(arg, cache)
-            else:
-                resolved = arg
+            resolved = self._resolve_single_arg(arg, cache) if is_fixture(arg) else arg
             resolved_args[name] = resolved
         return self._unpack_resolved(resolved_args)
 
@@ -584,8 +573,7 @@ class TestArgumentResolver:
 
         # Override the signature if @using is present
         if meta:
-            bound_args = getattr(fn.ward_meta, "bound_args", None)
-            if bound_args:
+            if bound_args := getattr(fn.ward_meta, "bound_args", None):
                 bound_args.apply_defaults()
                 return bound_args.arguments
 
@@ -645,10 +633,7 @@ class TestArgumentResolver:
 
     @staticmethod
     def _unpack_resolved(fixture_dict: Dict[str, Any]) -> Dict[str, Any]:
-        resolved_vals = {}
-        for (k, arg) in fixture_dict.items():
-            if isinstance(arg, Fixture):
-                resolved_vals[k] = arg.resolved_val
-            else:
-                resolved_vals[k] = arg
-        return resolved_vals
+        return {
+            k: arg.resolved_val if isinstance(arg, Fixture) else arg
+            for k, arg in fixture_dict.items()
+        }
